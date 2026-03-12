@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AprendeCode V3 — Arquitecto de Código</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg:#0B0E14; --bg2:#11151C; --bg3:#171C26; --bg4:#1D2433;
+  --card:#151A25; --card2:#1A2030;
+  --border:#262D3D; --border2:#313B50;
+  --text:#E8ECF4; --muted:#6B7A94; --muted2:#4A5568;
+  --cyan:#22D3EE; --cyan-dim:#0E7490; --cyan-bg:rgba(34,211,238,0.06);
+  --green:#34D399; --green-dim:#059669; --green-bg:rgba(52,211,153,0.06);
+  --amber:#FBBF24; --amber-bg:rgba(251,191,36,0.06);
+  --red:#FB7185; --red-bg:rgba(251,113,133,0.06);
+  --purple:#A78BFA; --purple-bg:rgba(167,139,250,0.06);
+  --blue:#60A5FA; --blue-bg:rgba(96,165,250,0.06);
+  --orange:#FB923C; --orange-bg:rgba(251,146,60,0.06);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;max-width:900px;margin:0 auto;}
+button{cursor:pointer;border:none;font-family:inherit;transition:all 0.2s;}
+button:active{transform:scale(0.97);}
+input,textarea,select{font-family:inherit;outline:none;}
+
+/* ═══ KEY SCREEN ═══ */
+#keyScreen {
+  position:fixed;inset:0;z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(ellipse at 50% 30%, rgba(34,211,238,0.04), transparent 60%), var(--bg);
+}
+.key-card {
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:36px 28px;max-width:440px;width:100%;text-align:center;
+}
+.key-icon{font-size:48px;margin-bottom:12px;}
+.key-title{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:4px;}
+.key-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.key-input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:13px 15px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
+  margin-bottom:12px;transition:border-color 0.3s;
+}
+.key-input:focus{border-color:var(--cyan);}
+.key-link{color:var(--cyan);font-size:12px;text-decoration:none;display:block;margin-bottom:16px;}
+.key-err{color:var(--red);font-size:12px;display:none;margin-bottom:8px;}
+.btn-enter{
+  width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;
+  background:linear-gradient(135deg, var(--cyan-dim), #0891B2);color:#fff;
+  letter-spacing:0.5px;
+}
+.key-note{font-size:11px;color:var(--muted2);margin-top:12px;}
+
+/* ═══ HEADER ═══ */
+.header{
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);
+}
+.h-icon{font-size:24px;}
+.h-title{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--cyan);}
+.h-sub{font-size:11px;color:var(--muted);}
+.h-right{margin-left:auto;display:flex;gap:6px;align-items:center;}
+.h-badge{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  padding:3px 8px;border-radius:5px;
+}
+
+/* ═══ TABS ═══ */
+.tabs{
+  display:flex;border-bottom:1px solid var(--border);padding:0 16px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.tab{
+  padding:12px 16px;font-size:13px;font-weight:500;color:var(--muted);
+  border-bottom:2px solid transparent;white-space:nowrap;background:none;
+  transition:all 0.2s;
+}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);font-weight:700;}
+
+/* ═══ CONTENT ═══ */
+.content{padding:16px;}
+.vista{display:none;}
+.vista.active{display:block;animation:fadeUp 0.3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
+.lbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;display:block;}
+
+/* ═══ VOICE AREA ═══ */
+.voice-hero{text-align:center;padding:20px 0;}
+.voice-title{font-size:18px;font-weight:800;margin-bottom:4px;}
+.voice-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+
+.mic-btn{
+  width:80px;height:80px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--border);
+  font-size:32px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto;transition:all 0.3s;
+}
+.mic-btn.on{
+  border-color:var(--red);background:var(--red-bg);color:var(--red);
+  animation:micPulse 1.5s ease-in-out infinite;
+}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,113,133,0.3)}50%{box-shadow:0 0 0 15px rgba(251,113,133,0)}}
+
+.mic-status{
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);
+  margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.mic-blink{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* ═══ TEXTAREA ═══ */
+.order-input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:14px;color:var(--text);font-size:14px;resize:vertical;min-height:100px;
+  line-height:1.6;transition:border-color 0.3s;
+}
+.order-input:focus{border-color:var(--cyan);}
+.order-input::placeholder{color:var(--muted2);}
+
+/* ═══ TEMPLATE GRID ═══ */
+.tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:500px){.tpl-grid{grid-template-columns:1fr;}}
+.tpl-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+}
+.tpl-card:active{border-color:var(--cyan);}
+.tpl-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cyan);opacity:0;transition:opacity 0.2s;}
+.tpl-card:active::before{opacity:1;}
+.tpl-icon{font-size:28px;margin-bottom:8px;}
+.tpl-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.tpl-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+.tpl-langs{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+.tpl-lang{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
+
+/* ═══ LANG SELECTOR ═══ */
+.lang-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+.lang-btn{
+  padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  background:var(--bg);border:1.5px solid var(--border);color:var(--muted);
+}
+.lang-btn.active{background:var(--cyan-bg);border-color:var(--cyan);color:var(--cyan);}
+
+/* ═══ ACTION BUTTONS ═══ */
+.btn-primary{
+  background:linear-gradient(135deg, var(--cyan-dim), #0891B2);color:#fff;
+  border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;
+  letter-spacing:0.5px;
+}
+.btn-secondary{
+  background:var(--bg4);color:var(--text);border:1px solid var(--border);
+  border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;
+}
+
+/* ═══ LOADING ═══ */
+.loading-box{display:flex;align-items:center;gap:12px;padding:20px;color:var(--muted);font-size:14px;}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════ */
+/* RESULTADO — SECCIONES SEPARADAS         */
+/* ═══════════════════════════════════════ */
+
+.result-header{
+  background:linear-gradient(135deg, var(--cyan-bg), var(--purple-bg));
+  border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;
+}
+.result-title{font-size:18px;font-weight:800;margin-bottom:4px;}
+.result-sub{font-size:13px;color:var(--muted);}
+.result-meta{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.meta-badge{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);
+}
+
+/* SECTION CARD */
+.section-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  margin-bottom:14px;overflow:hidden;transition:border-color 0.3s;
+}
+
+.section-head{
+  display:flex;align-items:center;gap:10px;padding:14px 16px;
+  border-bottom:1px solid var(--border);background:var(--bg3);
+  cursor:pointer;
+}
+
+.section-num{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800;
+  flex-shrink:0;
+}
+
+/* Color coding per language */
+.sec-html .section-num{background:rgba(251,146,60,0.15);color:var(--orange);}
+.sec-css .section-num{background:rgba(96,165,250,0.15);color:var(--blue);}
+.sec-js .section-num{background:rgba(251,191,36,0.15);color:var(--amber);}
+.sec-json .section-num{background:rgba(52,211,153,0.15);color:var(--green);}
+.sec-java .section-num{background:rgba(251,113,133,0.15);color:var(--red);}
+.sec-python .section-num{background:rgba(96,165,250,0.15);color:var(--blue);}
+.sec-xml .section-num{background:rgba(167,139,250,0.15);color:var(--purple);}
+.sec-gradle .section-num{background:rgba(52,211,153,0.15);color:var(--green);}
+.sec-config .section-num{background:rgba(107,122,148,0.2);color:var(--muted);}
+.sec-sql .section-num{background:rgba(34,211,238,0.15);color:var(--cyan);}
+.sec-bash .section-num{background:rgba(52,211,153,0.15);color:var(--green);}
+
+.sec-html .section-card{border-left:3px solid var(--orange);}
+.sec-css .section-card{border-left:3px solid var(--blue);}
+.sec-js .section-card{border-left:3px solid var(--amber);}
+.sec-json .section-card{border-left:3px solid var(--green);}
+.sec-java .section-card{border-left:3px solid var(--red);}
+.sec-python .section-card{border-left:3px solid var(--blue);}
+.sec-xml .section-card{border-left:3px solid var(--purple);}
+.sec-gradle .section-card{border-left:3px solid var(--green);}
+.sec-sql .section-card{border-left:3px solid var(--cyan);}
+.sec-bash .section-card{border-left:3px solid var(--green);}
+
+.section-info{flex:1;}
+.section-name{font-size:14px;font-weight:700;}
+.section-file{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;}
+.section-toggle{font-size:16px;color:var(--muted);transition:transform 0.3s;}
+.section-toggle.open{transform:rotate(180deg);}
+
+/* WHY box */
+.section-why{
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+}
+.why-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.why-label.purpose{color:var(--amber);}
+.why-label.function{color:var(--cyan);}
+.why-text{font-size:13px;color:var(--muted);line-height:1.7;}
+
+/* CODE block */
+.section-code{position:relative;}
+.code-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;background:var(--bg2);border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.code-dots{display:flex;gap:5px;}
+.code-dot{width:9px;height:9px;border-radius:50%;}
+.code-filename{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);}
+.copy-btn{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:4px 10px;border-radius:5px;background:var(--bg4);color:var(--muted);border:1px solid var(--border);
+}
+
+.code-block{
+  background:#0D1117;padding:14px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;line-height:1.8;color:#E6EDF3;overflow-x:auto;
+  white-space:pre-wrap;word-break:break-all;max-height:400px;overflow-y:auto;
+}
+
+/* ═══ ROADMAP / STRUCTURE ═══ */
+.structure-map{
+  display:flex;flex-direction:column;gap:8px;margin:12px 0;
+}
+.struct-item{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  font-size:13px;
+}
+.struct-num{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.struct-name{font-weight:600;}
+.struct-type{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto;}
+
+/* ═══ EXAMPLES ═══ */
+.ex-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:500px){.ex-grid{grid-template-columns:1fr;}}
+.ex-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:12px;cursor:pointer;transition:border-color 0.2s;
+}
+.ex-card:active{border-color:var(--cyan);}
+.ex-tag{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--cyan);margin-bottom:4px;}
+.ex-text{font-size:12px;color:var(--muted);line-height:1.5;}
+
+/* ═══ LEARN TAB ═══ */
+.topic-input{
+  flex:1;min-width:180px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;
+}
+.topic-input:focus{border-color:var(--cyan);}
+.tag-btn{
+  background:var(--bg4);color:var(--muted);border:1px solid var(--border);
+  border-radius:6px;padding:5px 10px;font-size:11px;font-weight:500;
+}
+.tag-btn:active{border-color:var(--cyan);color:var(--cyan);}
+
+/* ═══ HISTORY TAB ═══ */
+.hist-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:8px;
+}
+.hist-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);}
+.hist-title{font-size:14px;font-weight:700;margin:4px 0;}
+.hist-order{font-size:12px;color:var(--muted);line-height:1.4;}
+
+/* ═══ ANDROID STUDIO GUIDE ═══ */
+.guide-method{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  margin-bottom:14px;overflow:hidden;
+}
+.guide-method-head{
+  padding:16px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);cursor:pointer;
+}
+.guide-method-num{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;flex-shrink:0;
+}
+.method-a .guide-method-num{background:var(--green-bg);color:var(--green);}
+.method-b .guide-method-num{background:var(--purple-bg);color:var(--purple);}
+.guide-method-title{font-size:15px;font-weight:700;}
+.guide-method-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+.guide-step{
+  display:flex;gap:12px;padding:14px 16px;
+  border-bottom:1px solid rgba(38,45,61,0.5);
+  position:relative;
+}
+.guide-step:last-child{border-bottom:none;}
+.guide-step-num{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--cyan);flex-shrink:0;margin-top:2px;
+}
+.guide-step-content{flex:1;}
+.guide-step-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.guide-step-desc{font-size:13px;color:var(--muted);line-height:1.7;}
+.guide-step-path{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:6px 10px;margin-top:6px;color:var(--cyan);display:inline-block;
+  word-break:break-all;
+}
+.guide-step-warn{
+  background:var(--amber-bg);border:1px solid rgba(251,191,36,0.2);
+  border-radius:8px;padding:8px 10px;margin-top:6px;
+  font-size:12px;color:var(--amber);line-height:1.5;
+}
+.guide-step-tip{
+  background:var(--cyan-bg);border:1px solid rgba(34,211,238,0.2);
+  border-radius:8px;padding:8px 10px;margin-top:6px;
+  font-size:12px;color:var(--cyan);line-height:1.5;
+}
+
+.file-tree{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:2;color:var(--muted);overflow-x:auto;
+}
+.file-tree .folder{color:var(--amber);font-weight:600;}
+.file-tree .file-java{color:var(--red);}
+.file-tree .file-xml{color:var(--purple);}
+.file-tree .file-gradle{color:var(--green);}
+.file-tree .file-json{color:var(--green);}
+.file-tree .file-other{color:var(--muted);}
+.file-tree .indent{padding-left:20px;}
+.file-tree .indent2{padding-left:40px;}
+.file-tree .indent3{padding-left:60px;}
+.file-tree .indent4{padding-left:80px;}
+
+.method-toggle{
+  display:flex;gap:8px;margin-bottom:14px;
+}
+.method-tab{
+  flex:1;padding:12px;border-radius:10px;text-align:center;
+  font-size:13px;font-weight:700;border:1.5px solid var(--border);
+  background:var(--bg);color:var(--muted);transition:all 0.2s;
+}
+.method-tab.active-method{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-bg);}
+
+.nav-visual{
+  display:flex;align-items:center;gap:6px;margin:10px 0;
+  padding:10px 14px;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;font-size:12px;color:var(--muted);flex-wrap:wrap;
+}
+.nav-crumb{color:var(--text);font-weight:600;}
+.nav-arrow{color:var(--cyan);}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ API KEY ═══ -->
+<div id="keyScreen">
+  <div class="key-card">
+    <div class="key-icon">⚡</div>
+    <div class="key-title">AprendeCode V3</div>
+    <div class="key-sub">Explica tu idea con voz o texto — la IA genera el proyecto completo separado por archivos con explicaciones</div>
+    <a class="key-link" href="https://console.anthropic.com" target="_blank">👉 Obtener API Key gratis en console.anthropic.com →</a>
+    <input class="key-input" id="keyInput" type="password" placeholder="Pega tu API Key: sk-ant-..." onkeydown="if(event.key==='Enter')enterApp()">
+    <div class="key-err" id="keyErr">❌ Key inválida. Debe empezar con sk-</div>
+    <button class="btn-enter" onclick="enterApp()">Entrar →</button>
+    <div class="key-note">Se guarda solo en tu navegador. PRO PART SYSTEM V12</div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app" style="display:none;">
+
+  <div class="header">
+    <div class="h-icon">⚡</div>
+    <div>
+      <div class="h-title">APRENDECODE V3</div>
+      <div class="h-sub">Arquitecto de Código con IA</div>
+    </div>
+    <div class="h-right">
+      <span class="h-badge" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim);">IA ON</span>
+      <button onclick="changeKey()" style="background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:11px;color:var(--muted);">🔑</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="architect" onclick="setTab('architect')">🏗️ Arquitecto</button>
+    <button class="tab" data-tab="android" onclick="setTab('android')">📱 Android Studio</button>
+    <button class="tab" data-tab="learn" onclick="setTab('learn')">📚 Aprender</button>
+    <button class="tab" data-tab="history" onclick="setTab('history')">🕐 Historial (<span id="histCount">0</span>)</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ ARQUITECTO TAB ═══ -->
+    <div class="vista active" id="tab-architect">
+
+      <div class="card">
+        <div class="voice-hero">
+          <div class="voice-title">Describe tu proyecto 🎯</div>
+          <div class="voice-sub">Habla o escribe tu idea — la IA genera todos los archivos separados</div>
+
+          <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎙️</button>
+          <div class="mic-status" id="micStatus">Toca el micrófono para dictar</div>
+        </div>
+
+        <textarea class="order-input" id="orderInput" placeholder="Ejemplo: Hazme una app Android que tenga un login, una pantalla principal con lista de productos y conexión a Firebase...&#10;&#10;O más simple: Crea una página web con un formulario de contacto que envíe por email"></textarea>
+
+        <!-- Template selector -->
+        <div style="margin-top:14px;">
+          <div class="lbl">📐 PLANTILLAS DE PROYECTO</div>
+          <div class="tpl-grid">
+            <div class="tpl-card" onclick="useTpl('android')">
+              <div class="tpl-icon">📱</div>
+              <div class="tpl-name">App Android</div>
+              <div class="tpl-desc">Activity, Layout XML, Gradle, Manifest</div>
+              <div class="tpl-langs"><span class="tpl-lang">Java</span><span class="tpl-lang">XML</span><span class="tpl-lang">Gradle</span></div>
+            </div>
+            <div class="tpl-card" onclick="useTpl('web')">
+              <div class="tpl-icon">🌐</div>
+              <div class="tpl-name">Sitio Web</div>
+              <div class="tpl-desc">HTML, CSS, JavaScript, responsive</div>
+              <div class="tpl-langs"><span class="tpl-lang">HTML</span><span class="tpl-lang">CSS</span><span class="tpl-lang">JS</span></div>
+            </div>
+            <div class="tpl-card" onclick="useTpl('api')">
+              <div class="tpl-icon">🔌</div>
+              <div class="tpl-name">API + Base de Datos</div>
+              <div class="tpl-desc">Backend, endpoints, JSON, SQL</div>
+              <div class="tpl-langs"><span class="tpl-lang">Python</span><span class="tpl-lang">JSON</span><span class="tpl-lang">SQL</span></div>
+            </div>
+            <div class="tpl-card" onclick="useTpl('iot')">
+              <div class="tpl-icon">🔧</div>
+              <div class="tpl-name">IoT / Arduino</div>
+              <div class="tpl-desc">Sensores, comunicación, pantalla</div>
+              <div class="tpl-langs"><span class="tpl-lang">C++</span><span class="tpl-lang">JSON</span></div>
+            </div>
+            <div class="tpl-card" onclick="useTpl('firebase')">
+              <div class="tpl-icon">🔥</div>
+              <div class="tpl-name">App + Firebase</div>
+              <div class="tpl-desc">Auth, Firestore, Cloud Functions</div>
+              <div class="tpl-langs"><span class="tpl-lang">JS</span><span class="tpl-lang">JSON</span><span class="tpl-lang">HTML</span></div>
+            </div>
+            <div class="tpl-card" onclick="useTpl('game')">
+              <div class="tpl-icon">🎮</div>
+              <div class="tpl-name">Juego Web</div>
+              <div class="tpl-desc">Canvas, sprites, lógica, sonido</div>
+              <div class="tpl-langs"><span class="tpl-lang">HTML</span><span class="tpl-lang">JS</span><span class="tpl-lang">CSS</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+          <button class="btn-primary" id="btnGenerate" onclick="generate()" style="flex:1;min-width:180px;">🏗️ Generar Proyecto →</button>
+          <button class="btn-secondary" onclick="clearAll()">🗑️</button>
+        </div>
+      </div>
+
+      <!-- Examples -->
+      <div class="card" id="examplesCard">
+        <div class="lbl">💡 IDEAS DE EJEMPLO</div>
+        <div class="ex-grid">
+          <div class="ex-card" onclick="useEx(this)"><div class="ex-tag">📱 ANDROID</div><div class="ex-text">App de inventario con escáner de códigos de barras y base de datos local</div></div>
+          <div class="ex-card" onclick="useEx(this)"><div class="ex-tag">🌐 WEB</div><div class="ex-text">Dashboard con gráficas de ventas, filtros por fecha y exportar a PDF</div></div>
+          <div class="ex-card" onclick="useEx(this)"><div class="ex-tag">🔌 API</div><div class="ex-text">Sistema de citas para taller mecánico con notificaciones por WhatsApp</div></div>
+          <div class="ex-card" onclick="useEx(this)"><div class="ex-tag">🔥 FIREBASE</div><div class="ex-text">App de diagnóstico automotriz con login, historial por VIN y datos en la nube</div></div>
+          <div class="ex-card" onclick="useEx(this)"><div class="ex-tag">📱 ANDROID</div><div class="ex-text">App de lista de compras con voz, categorías y compartir por WhatsApp</div></div>
+          <div class="ex-card" onclick="useEx(this)"><div class="ex-tag">🌐 WEB</div><div class="ex-text">Catálogo de refacciones con búsqueda, fotos, precios y botón de WhatsApp</div></div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="resultArea" style="display:none;"></div>
+    </div>
+
+    <!-- ═══ ANDROID STUDIO TAB ═══ -->
+    <div class="vista" id="tab-android">
+
+      <!-- INTRO -->
+      <div class="card">
+        <div style="font-size:20px;font-weight:800;margin-bottom:4px;">📱 Cómo subir tu proyecto a Android Studio</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;">
+          Cuando generas un proyecto Android en el Arquitecto, recibes archivos Java, XML, Gradle, etc. Aquí te explico paso a paso cómo meterlos a Android Studio para que funcionen.
+        </div>
+        <div style="background:var(--amber-bg);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px;font-size:13px;color:var(--amber);line-height:1.6;">
+          ⚠️ <strong>Importante:</strong> Cada proyecto Android tiene archivos diferentes (distintas Activities, layouts, servicios), pero la ESTRUCTURA de carpetas siempre es la misma. Lo que cambia es el contenido, no dónde va.
+        </div>
+      </div>
+
+      <!-- ESTRUCTURA DE UN PROYECTO ANDROID -->
+      <div class="card">
+        <div class="lbl">📂 ESTRUCTURA DE UN PROYECTO ANDROID</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Todos los proyectos Android siguen esta estructura. Memorízala y nunca te pierdes:</div>
+        <div class="file-tree">
+          <div><span class="folder">📁 MiProyecto/</span></div>
+          <div class="indent"><span class="file-gradle">📄 build.gradle</span> ← Gradle del proyecto (general)</div>
+          <div class="indent"><span class="file-other">📄 settings.gradle</span></div>
+          <div class="indent"><span class="folder">📁 app/</span></div>
+          <div class="indent2"><span class="file-gradle">📄 build.gradle</span> ← Gradle de la app (dependencias, SDK)</div>
+          <div class="indent2"><span class="folder">📁 src/</span></div>
+          <div class="indent3"><span class="folder">📁 main/</span></div>
+          <div class="indent4"><span class="file-xml">📄 AndroidManifest.xml</span> ← Permisos y Activities</div>
+          <div class="indent4"><span class="folder">📁 java/com/tu/paquete/</span> ← Archivos .java</div>
+          <div class="indent4" style="padding-left:100px;"><span class="file-java">📄 MainActivity.java</span></div>
+          <div class="indent4" style="padding-left:100px;"><span class="file-java">📄 LoginActivity.java</span></div>
+          <div class="indent4" style="padding-left:100px;"><span class="file-java">📄 Adaptador.java</span></div>
+          <div class="indent4"><span class="folder">📁 res/</span> ← Recursos (XML layouts, imágenes, strings)</div>
+          <div class="indent4" style="padding-left:100px;"><span class="folder">📁 layout/</span> ← Pantallas XML</div>
+          <div class="indent4" style="padding-left:120px;"><span class="file-xml">📄 activity_main.xml</span></div>
+          <div class="indent4" style="padding-left:120px;"><span class="file-xml">📄 activity_login.xml</span></div>
+          <div class="indent4" style="padding-left:100px;"><span class="folder">📁 values/</span> ← Colores, textos, estilos</div>
+          <div class="indent4" style="padding-left:120px;"><span class="file-xml">📄 strings.xml</span></div>
+          <div class="indent4" style="padding-left:120px;"><span class="file-xml">📄 colors.xml</span></div>
+          <div class="indent4" style="padding-left:100px;"><span class="folder">📁 drawable/</span> ← Imágenes e íconos</div>
+        </div>
+      </div>
+
+      <!-- DÓNDE VA CADA ARCHIVO -->
+      <div class="card">
+        <div class="lbl">🎯 ¿DÓNDE VA CADA TIPO DE ARCHIVO?</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Cuando copies código del Arquitecto, pon cada archivo en su lugar correcto:</div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--red);color:var(--red);">J</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--red);">Archivos .java (Activities, Modelos, Adaptadores)</div>
+            <div class="guide-step-path">app → src → main → java → com → tu → paquete → <strong>AQUÍ</strong></div>
+            <div class="guide-step-desc">Cada clase Java va aquí. MainActivity.java, LoginActivity.java, etc. El paquete es como "com.propart.diagnostic"</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--purple);color:var(--purple);">X</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--purple);">Layouts XML (pantallas)</div>
+            <div class="guide-step-path">app → src → main → res → layout → <strong>AQUÍ</strong></div>
+            <div class="guide-step-desc">activity_main.xml, activity_login.xml, item_producto.xml... todo layout aquí.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--purple);color:var(--purple);">M</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--purple);">AndroidManifest.xml</div>
+            <div class="guide-step-path">app → src → main → <strong>AndroidManifest.xml</strong></div>
+            <div class="guide-step-desc">Aquí se registran Activities, permisos (CAMERA, INTERNET, BLUETOOTH, LOCATION), y el nombre de la app.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--green);color:var(--green);">G</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--green);">build.gradle (Module: app)</div>
+            <div class="guide-step-path">app → <strong>build.gradle</strong></div>
+            <div class="guide-step-desc">Dependencias (Firebase, ZXing, BLE, etc.), minSdk, targetSdk, applicationId van aquí. NO confundir con el build.gradle de la raíz.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--amber);color:var(--amber);">R</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--amber);">values/ (strings.xml, colors.xml, styles.xml)</div>
+            <div class="guide-step-path">app → src → main → res → values → <strong>AQUÍ</strong></div>
+            <div class="guide-step-desc">Textos de la app, colores del tema, estilos globales.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;">
+          <div class="guide-step-num" style="border-color:var(--orange);color:var(--orange);">D</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--orange);">drawable/ (imágenes, íconos SVG)</div>
+            <div class="guide-step-path">app → src → main → res → drawable → <strong>AQUÍ</strong></div>
+            <div class="guide-step-desc">Logos, íconos, backgrounds personalizados. Formatos: PNG, XML shape, SVG (vector).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÉTODO SELECTOR -->
+      <div class="card">
+        <div class="lbl">🛠️ ELIGE TU MÉTODO</div>
+        <div class="method-toggle">
+          <button class="method-tab active-method" id="mtab-manual" onclick="showMethod('manual')">📝 Método Manual</button>
+          <button class="method-tab" id="mtab-github" onclick="showMethod('github')">🐙 Desde GitHub</button>
+        </div>
+
+        <!-- ═══ MÉTODO 1: MANUAL ═══ -->
+        <div id="method-manual">
+          <div style="background:var(--green-bg);border:1px solid var(--green-dim);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--green);line-height:1.6;">
+            ✅ <strong>Mejor para:</strong> Cuando te dieron archivos sueltos (de Claude, de un tutorial, o de aquí del Arquitecto) y necesitas armarlos en un proyecto nuevo.
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Abre Android Studio → New Project</div>
+              <div class="guide-step-desc">Abre Android Studio. En la pantalla de inicio toca <strong>"New Project"</strong>.</div>
+              <div class="nav-visual">
+                <span class="nav-crumb">Android Studio</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">New Project</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Elige "Empty Activity"</div>
+              <div class="guide-step-desc">En las plantillas, selecciona <strong>"Empty Views Activity"</strong> (no Compose, a menos que tu código sea Compose). Esto te da la estructura básica lista.</div>
+              <div class="guide-step-tip">💡 Si tu proyecto usa Fragments, igual empieza con Empty Activity. Los Fragments se agregan después.</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Configura nombre y paquete</div>
+              <div class="guide-step-desc">
+                <strong>Name:</strong> El nombre de tu app (ej: "ProPart Diagnostic")<br>
+                <strong>Package name:</strong> Identificador único (ej: com.propart.diagnostic)<br>
+                <strong>Language:</strong> Java<br>
+                <strong>Minimum SDK:</strong> API 24 (Android 7.0) recomendado
+              </div>
+              <div class="guide-step-warn">⚠️ El <strong>Package name</strong> DEBE coincidir con el que viene en los archivos Java. Si tu código dice <code>package com.propart.diagnostic;</code> entonces aquí pones exactamente eso.</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Dale "Finish" — espera que Gradle sincronice</div>
+              <div class="guide-step-desc">Android Studio crea el proyecto y baja dependencias. La barra de abajo dice "Gradle sync". Espera a que termine (puede tardar 1-3 minutos la primera vez).</div>
+              <div class="guide-step-tip">💡 Si falla el Gradle, revisa que tengas internet y que tu SDK esté actualizado: Tools → SDK Manager.</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">5</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Cambia a vista "Project" (no "Android")</div>
+              <div class="guide-step-desc">En el panel izquierdo, arriba dice <strong>"Android"</strong>. Cámbialo a <strong>"Project"</strong> para ver la estructura REAL de carpetas. Así encuentras exactamente dónde poner cada archivo.</div>
+              <div class="nav-visual">
+                <span class="nav-crumb">Panel izquierdo</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">Dropdown "Android"</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">Cambiar a "Project"</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">6</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Reemplaza/agrega los archivos Java</div>
+              <div class="guide-step-desc">
+                Navega a <code>app/src/main/java/com/tu/paquete/</code><br><br>
+                <strong>Para MainActivity.java:</strong> Ya existe uno que creó Android Studio. Ábrelo y REEMPLAZA todo el contenido con el código que te dio el Arquitecto. Copia y pega completo.<br><br>
+                <strong>Para archivos nuevos</strong> (LoginActivity.java, Adapter, etc.): Click derecho en la carpeta del paquete → <strong>New → Java Class</strong> → Pon el nombre exacto → Pega el código completo.
+              </div>
+              <div class="nav-visual">
+                <span class="nav-crumb">app</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">src</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">main</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">java</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">com.tu.paquete</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb" style="color:var(--red);">Click derecho → New → Java Class</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">7</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Reemplaza/agrega los layouts XML</div>
+              <div class="guide-step-desc">
+                Navega a <code>app/src/main/res/layout/</code><br><br>
+                <strong>activity_main.xml</strong> ya existe — ábrelo y pega el código XML nuevo.<br>
+                <strong>Nuevos layouts:</strong> Click derecho en <code>layout/</code> → <strong>New → Layout Resource File</strong> → Nombre exacto (ej: activity_login) → Pega el XML.
+              </div>
+              <div class="nav-visual">
+                <span class="nav-crumb">app</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">src</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">main</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">res</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb" style="color:var(--purple);">layout → Click derecho → New → Layout Resource File</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">8</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Actualiza el AndroidManifest.xml</div>
+              <div class="guide-step-desc">
+                Abre <code>app/src/main/AndroidManifest.xml</code>. Agrega:<br><br>
+                • <strong>Permisos</strong> que necesita tu app (INTERNET, CAMERA, BLUETOOTH, etc.) — van ANTES de la etiqueta <code>&lt;application&gt;</code><br>
+                • <strong>Activities nuevas</strong> — cada Activity que agregas debe registrarse con una etiqueta <code>&lt;activity&gt;</code> dentro de <code>&lt;application&gt;</code>
+              </div>
+              <div class="guide-step-warn">⚠️ Si no registras una Activity en el Manifest, la app TRUENA al intentar abrirla. Error clásico: "Activity not found".</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">9</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Actualiza build.gradle (Module: app)</div>
+              <div class="guide-step-desc">
+                Abre <code>app/build.gradle</code> (el que dice "Module: app", NO el de "Project").<br><br>
+                Agrega las dependencias que necesita tu proyecto en el bloque <code>dependencies { }</code>. Ejemplo:
+              </div>
+              <div style="background:#0D1117;border-radius:8px;padding:10px;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#E6EDF3;line-height:1.8;">
+dependencies {<br>
+&nbsp;&nbsp;implementation 'com.google.firebase:firebase-bom:32.0.0'<br>
+&nbsp;&nbsp;implementation 'com.journeyapps:zxing-android-embedded:4.3.0'<br>
+&nbsp;&nbsp;// ... las que indique tu proyecto<br>
+}
+              </div>
+              <div class="guide-step-tip">💡 Después de editar build.gradle, Android Studio te pide "Sync Now" arriba — DALE. Si no sale, ve a File → Sync Project with Gradle Files.</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">10</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Conecta tu celular y dale ▶ Run</div>
+              <div class="guide-step-desc">
+                Conecta tu Android por USB. Activa <strong>Depuración USB</strong> en opciones de desarrollador.<br>
+                Arriba en Android Studio aparece tu dispositivo. Dale al botón verde ▶ (Run).<br>
+                Si hay errores, léelos abajo en "Build" — casi siempre es un import faltante o un recurso que no encuentra.
+              </div>
+              <div class="nav-visual">
+                <span class="nav-crumb">Toolbar</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb">Seleccionar dispositivo</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb" style="color:var(--green);">▶ Run 'app'</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ MÉTODO 2: GITHUB ═══ -->
+        <div id="method-github" style="display:none;">
+          <div style="background:var(--purple-bg);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--purple);line-height:1.6;">
+            ✅ <strong>Mejor para:</strong> Cuando el proyecto ya está en un repo de GitHub (como tus proyectos en github.com/84-fmill-mel30) y quieres bajarlo completo ya armado.
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Abre Android Studio → "Get from VCS"</div>
+              <div class="guide-step-desc">En la pantalla de inicio, en lugar de "New Project", busca el botón <strong>"Get from Version Control"</strong> (o "Get from VCS").</div>
+              <div class="nav-visual">
+                <span class="nav-crumb">Android Studio</span> <span class="nav-arrow">→</span>
+                <span class="nav-crumb" style="color:var(--purple);">Get from VCS</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Pega la URL del repositorio</div>
+              <div class="guide-step-desc">
+                En "URL" pega la dirección de tu repo. Ejemplo:
+              </div>
+              <div class="guide-step-path">https://github.com/84-fmill-mel30/tu-repo.git</div>
+              <div class="guide-step-desc" style="margin-top:6px;">
+                En "Directory" elige dónde quieres guardar el proyecto en tu computadora.<br>
+                Dale <strong>"Clone"</strong>.
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Android Studio detecta el proyecto</div>
+              <div class="guide-step-desc">Si el repo tiene un proyecto Android válido (con build.gradle), Android Studio lo reconoce automáticamente y empieza a sincronizar Gradle. Espera a que termine.</div>
+              <div class="guide-step-warn">⚠️ Si el repo solo tiene archivos sueltos (sin estructura de proyecto), Android Studio NO lo reconoce. En ese caso usa el Método Manual y copia los archivos uno por uno.</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Verifica SDK y dependencias</div>
+              <div class="guide-step-desc">
+                Si el proyecto fue hecho con una versión diferente de Android SDK, puede pedir que bajes componentes extra. Android Studio te avisa con links azules — dale click para instalar lo que falta.
+              </div>
+              <div class="guide-step-tip">💡 Revisa que el <code>compileSdkVersion</code> y <code>buildToolsVersion</code> en build.gradle coincidan con lo que tienes instalado. Si no, cámbialos a tu versión.</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="guide-step-num">5</div>
+            <div class="guide-step-content">
+              <div class="guide-step-title">Run ▶ y prueba</div>
+              <div class="guide-step-desc">Conecta tu dispositivo, dale ▶ Run. Si todo el repo estaba bien armado, debería compilar directo.</div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:14px;">
+            <div class="lbl">🔄 ALTERNATIVA: ABRIR PROYECTO EXISTENTE</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px;">
+              Si ya bajaste el repo con <code>git clone</code> desde la terminal, o lo descargaste como ZIP:
+            </div>
+            <div class="guide-step" style="padding:0;">
+              <div class="guide-step-num">A</div>
+              <div class="guide-step-content">
+                <div class="guide-step-desc">
+                  Android Studio → <strong>File → Open</strong> → Navega a la carpeta del proyecto → Selecciona la carpeta raíz (la que tiene el build.gradle) → <strong>Open</strong>
+                </div>
+                <div class="nav-visual">
+                  <span class="nav-crumb">File</span> <span class="nav-arrow">→</span>
+                  <span class="nav-crumb">Open</span> <span class="nav-arrow">→</span>
+                  <span class="nav-crumb">Seleccionar carpeta raíz</span> <span class="nav-arrow">→</span>
+                  <span class="nav-crumb" style="color:var(--green);">OK</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERRORES COMUNES -->
+      <div class="card">
+        <div class="lbl">🔥 ERRORES COMUNES Y SOLUCIONES</div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--red);color:var(--red);">!</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--red);">"Cannot resolve symbol R"</div>
+            <div class="guide-step-desc"><strong>Causa:</strong> Error en un XML (layout, strings, colors). Un solo carácter mal rompe la R.<br><strong>Solución:</strong> Build → Clean Project, luego Build → Rebuild. Si sigue, revisa tus XMLs buscando errores rojos.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--red);color:var(--red);">!</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--red);">"Activity not found" / App se cierra</div>
+            <div class="guide-step-desc"><strong>Causa:</strong> No registraste la Activity en AndroidManifest.xml<br><strong>Solución:</strong> Agrega <code>&lt;activity android:name=".NombreActivity"/&gt;</code> dentro de <code>&lt;application&gt;</code></div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--red);color:var(--red);">!</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--red);">"Gradle sync failed"</div>
+            <div class="guide-step-desc"><strong>Causa:</strong> Dependencia mal escrita, sin internet, o versión incompatible.<br><strong>Solución:</strong> Lee el error abajo. Generalmente dice qué librería falla. Verifica la versión en el build.gradle.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+          <div class="guide-step-num" style="border-color:var(--red);color:var(--red);">!</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--red);">"Package name does not match"</div>
+            <div class="guide-step-desc"><strong>Causa:</strong> El paquete en el Java dice com.x.y pero la carpeta o el Manifest dice otro.<br><strong>Solución:</strong> Los 3 deben coincidir: la carpeta, la línea <code>package</code> en Java, y el <code>package</code> en AndroidManifest.</div>
+          </div>
+        </div>
+
+        <div class="guide-step" style="border:1px solid var(--border);border-radius:10px;">
+          <div class="guide-step-num" style="border-color:var(--red);color:var(--red);">!</div>
+          <div class="guide-step-content">
+            <div class="guide-step-title" style="color:var(--red);">"No devices found" / No detecta el celular</div>
+            <div class="guide-step-desc"><strong>Causa:</strong> USB solo carga, o no activaste depuración USB.<br><strong>Solución:</strong> En tu cel: Ajustes → Acerca del teléfono → Toca "Número de compilación" 7 veces → Regresa → Opciones de desarrollador → Activa "Depuración USB". Cambia el cable a "Transferir archivos".</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKLIST RESUMEN -->
+      <div class="card">
+        <div class="lbl">✅ CHECKLIST ANTES DE CORRER</div>
+        <div style="font-size:13px;color:var(--muted);line-height:2.2;">
+          <div>☐ Package name coincide en Java, Manifest y build.gradle</div>
+          <div>☐ Todas las Activities registradas en AndroidManifest.xml</div>
+          <div>☐ Permisos agregados en AndroidManifest (INTERNET, CAMERA, etc.)</div>
+          <div>☐ Dependencias en build.gradle + Sync exitoso</div>
+          <div>☐ Archivos Java en la carpeta correcta del paquete</div>
+          <div>☐ Layouts XML en res/layout/</div>
+          <div>☐ strings.xml y colors.xml actualizados si los usa el código</div>
+          <div>☐ Build → Clean Project antes de correr</div>
+          <div>☐ Dispositivo con depuración USB activada</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ APRENDER TAB ═══ -->
+    <div class="vista" id="tab-learn">
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:6px;">📚 Aprende programación desde cero</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:14px;">Pregunta cualquier tema y Claude te explica con ejemplos.</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <input class="topic-input" id="topicInput" placeholder="Ej: qué son las variables, cómo usar funciones..." onkeydown="if(event.key==='Enter')learnTopic()">
+          <button class="btn-primary" onclick="learnTopic()" id="btnLearn">📖 Aprender →</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="tag-btn" onclick="quickLearn('Variables y tipos de datos')">Variables</button>
+          <button class="tag-btn" onclick="quickLearn('Funciones')">Funciones</button>
+          <button class="tag-btn" onclick="quickLearn('Bucles for y while')">Bucles</button>
+          <button class="tag-btn" onclick="quickLearn('Listas y Arrays')">Listas</button>
+          <button class="tag-btn" onclick="quickLearn('JSON qué es y cómo usarlo')">JSON</button>
+          <button class="tag-btn" onclick="quickLearn('APIs REST cómo funcionan')">APIs</button>
+          <button class="tag-btn" onclick="quickLearn('Bases de datos SQL básico')">SQL</button>
+          <button class="tag-btn" onclick="quickLearn('Git y GitHub para principiantes')">Git</button>
+        </div>
+      </div>
+      <div id="learnResult"></div>
+    </div>
+
+    <!-- ═══ HISTORIAL TAB ═══ -->
+    <div class="vista" id="tab-history">
+      <div class="card">
+        <div class="lbl">🕐 HISTORIAL DE PROYECTOS</div>
+        <div id="histBody"><div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">📭</div>Aún no has generado proyectos.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let apiKey='', listening=false, recognition=null, history=[];
+
+// ═══ LANG COLORS MAP ═══
+const LANG_COLORS = {
+  html:'orange', css:'blue', js:'amber', javascript:'amber',
+  json:'green', java:'red', python:'blue', xml:'purple',
+  gradle:'green', sql:'cyan', bash:'green', shell:'green',
+  'c++':'red', kotlin:'purple', swift:'orange', config:'config'
+};
+
+// ═══ API KEY ═══
+function enterApp(){
+  const v=document.getElementById('keyInput').value.trim();
+  if(!v.startsWith('sk-')){document.getElementById('keyErr').style.display='block';return;}
+  apiKey=v;
+  try{localStorage.setItem('ac3_key',v);}catch(e){}
+  document.getElementById('keyScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+function changeKey(){
+  document.getElementById('keyScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+window.onload=()=>{
+  try{
+    const s=localStorage.getItem('ac3_key');
+    if(s&&s.startsWith('sk-')){apiKey=s;document.getElementById('keyInput').value=s;document.getElementById('keyScreen').style.display='none';document.getElementById('app').style.display='block';}
+  }catch(e){}
+};
+
+// ═══ TABS ═══
+function setTab(id){
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  if(id==='history')renderHistory();
+}
+
+// ═══ ANDROID STUDIO METHODS ═══
+function showMethod(m){
+  document.getElementById('method-manual').style.display = m==='manual'?'block':'none';
+  document.getElementById('method-github').style.display = m==='github'?'block':'none';
+  document.getElementById('mtab-manual').classList.toggle('active-method', m==='manual');
+  document.getElementById('mtab-github').classList.toggle('active-method', m==='github');
+}
+
+// ═══ MIC ═══
+function toggleMic(){
+  if(listening){recognition&&recognition.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Usa Chrome o Edge para micrófono.');return;}
+  recognition=new SR();recognition.lang='es-MX';recognition.continuous=true;recognition.interimResults=true;
+  recognition.onresult=e=>{
+    let final='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    const ta=document.getElementById('orderInput');
+    if(final) ta.value=(ta.value+' '+final).trim();
+    if(interim) document.getElementById('micStatus').innerHTML='<span class="mic-blink"></span> "'+interim+'"';
+  };
+  recognition.onend=()=>{listening=false;updateMicUI();};
+  recognition.onerror=()=>{listening=false;updateMicUI();};
+  recognition.start();listening=true;updateMicUI();
+}
+function updateMicUI(){
+  const b=document.getElementById('micBtn'),s=document.getElementById('micStatus');
+  if(listening){b.className='mic-btn on';b.textContent='⏹';s.innerHTML='<span class="mic-blink"></span> Escuchando... habla tu idea';}
+  else{b.className='mic-btn';b.textContent='🎙️';s.textContent='Toca el micrófono para dictar';}
+}
+
+// ═══ TEMPLATES ═══
+const TEMPLATES = {
+  android:'Crea una app Android con: Activity principal, Layout XML, menú de navegación, adaptador para RecyclerView, modelo de datos, y archivo Gradle con dependencias.',
+  web:'Crea un sitio web completo con: HTML estructura, CSS estilos responsivos, JavaScript interactividad, diseño moderno y profesional.',
+  api:'Crea una API REST con: servidor Python Flask, endpoints CRUD, modelo de base de datos SQL, archivo de configuración, y ejemplo de peticiones JSON.',
+  iot:'Crea un proyecto IoT con Arduino: código C++ para sensores, comunicación serial, archivo de configuración JSON, y script Python para recibir datos.',
+  firebase:'Crea una app web con Firebase: HTML con formularios, JavaScript con Firebase Auth y Firestore, reglas de seguridad JSON, y estructura de colecciones.',
+  game:'Crea un juego web con: HTML canvas, JavaScript con game loop, sprites, detección de colisiones, sistema de puntuación y CSS responsive.'
+};
+
+function useTpl(type){
+  const ta=document.getElementById('orderInput');
+  ta.value=TEMPLATES[type];
+  ta.focus();
+}
+function useEx(el){document.getElementById('orderInput').value=el.querySelector('.ex-text').textContent;}
+
+// ═══ GENERATE — MAIN FUNCTION ═══
+async function generate(){
+  const order=document.getElementById('orderInput').value.trim();
+  if(!order)return;
+  if(listening){recognition&&recognition.stop();}
+
+  const btn=document.getElementById('btnGenerate');
+  btn.textContent='⏳ Generando proyecto...';btn.disabled=true;
+  document.getElementById('examplesCard').style.display='none';
+  const ra=document.getElementById('resultArea');
+  ra.style.display='block';
+  ra.innerHTML='<div class="card loading-box"><div class="spinner"></div><span>Claude está diseñando tu proyecto con archivos separados...</span></div>';
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:4000,
+        system:`Eres un arquitecto de software experto. El usuario describe un proyecto en español (puede ser informal, con errores o por voz).
+Tu trabajo: generar el proyecto COMPLETO separado por archivos, cada uno con explicación.
+
+Responde SOLO en JSON válido sin markdown ni texto extra. Estructura:
+{
+  "nombre_proyecto":"nombre corto",
+  "descripcion":"qué hace el proyecto en 1-2 líneas",
+  "tipo":"android|web|api|iot|firebase|game|otro",
+  "archivos":[
+    {
+      "numero":1,
+      "nombre_archivo":"MainActivity.java",
+      "lenguaje":"java",
+      "por_que_existe":"Explicación de POR QUÉ este archivo es necesario en el proyecto. Usa lenguaje simple, como si explicaras a alguien que está aprendiendo. Ej: Este archivo es el cerebro de la app, es lo primero que se ejecuta cuando abres la app.",
+      "que_hace":"Explicación de QUÉ HACE este archivo específicamente. Ej: Carga la pantalla principal, conecta los botones con sus acciones, y maneja la navegación entre pantallas.",
+      "codigo":"código completo funcional con comentarios en español en cada sección importante"
+    }
+  ],
+  "como_usar":"Instrucciones paso a paso para usar/ejecutar el proyecto, 3-5 pasos",
+  "estructura":"Diagrama simple de cómo se conectan los archivos entre sí"
+}
+
+REGLAS:
+- Cada archivo SEPARADO con su extensión correcta
+- Comentarios en español dentro del código
+- Explicaciones como si hablaras con un aprendiz
+- Código 100% funcional, no pseudocódigo
+- Mínimo 3 archivos, máximo 10
+- El "lenguaje" debe ser: html, css, js, json, java, python, xml, gradle, sql, bash, kotlin, swift, c++, config`,
+        messages:[{role:'user',content:`Mi proyecto: ${order}`}]
+      })
+    });
+
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Error '+res.status);}
+    const data=await res.json();
+    const txt=data.content.map(c=>c.text||'').join('');
+    const project=JSON.parse(txt.replace(/```json|```/g,'').trim());
+
+    // Save history
+    history.unshift({order, project, time:new Date().toLocaleTimeString()});
+    if(history.length>10)history.pop();
+    document.getElementById('histCount').textContent=history.length;
+
+    renderProject(project);
+
+  }catch(e){
+    let msg='❌ Error de conexión.';
+    if(e.message.includes('401'))msg='❌ API Key inválida. <button class="btn-secondary" style="margin-left:8px;font-size:12px;padding:6px 10px" onclick="changeKey()">🔑 Cambiar Key</button>';
+    else if(e.message.includes('429'))msg='⏳ Demasiadas peticiones. Espera un momento.';
+    ra.innerHTML=`<div class="card"><div style="color:var(--red);font-size:13px">${msg}</div><div style="color:var(--muted);font-size:11px;margin-top:8px;font-family:monospace;background:var(--bg);padding:8px;border-radius:6px">${esc(e.message)}</div></div>`;
+  }
+
+  btn.textContent='🏗️ Generar Proyecto →';btn.disabled=false;
+}
+
+// ═══ RENDER PROJECT ═══
+function renderProject(p){
+  const ra=document.getElementById('resultArea');
+  let h='';
+
+  // Header
+  h+=`<div class="result-header">
+    <div class="result-title">${esc(p.nombre_proyecto)}</div>
+    <div class="result-sub">${esc(p.descripcion)}</div>
+    <div class="result-meta">
+      <span class="meta-badge" style="color:var(--cyan);border-color:var(--cyan-dim);">${p.tipo||'proyecto'}</span>
+      <span class="meta-badge">${p.archivos.length} archivos</span>
+      <button class="meta-badge" style="cursor:pointer;color:var(--amber);border-color:rgba(251,191,36,0.3);" onclick="clearAll()">⚡ Nuevo proyecto</button>
+    </div>
+  </div>`;
+
+  // Structure map
+  h+=`<div class="card"><div class="lbl">🗺️ MAPA DEL PROYECTO</div>`;
+  h+=`<div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6;">${esc(p.estructura||'')}</div>`;
+  h+=`<div class="structure-map">`;
+  p.archivos.forEach((f,i)=>{
+    const color=LANG_COLORS[f.lenguaje]||'cyan';
+    h+=`<div class="struct-item">
+      <div class="struct-num" style="background:var(--${color}-bg,var(--cyan-bg));color:var(--${color},var(--cyan));">${f.numero||i+1}</div>
+      <span class="struct-name">${esc(f.nombre_archivo)}</span>
+      <span class="struct-type">${f.lenguaje}</span>
+    </div>`;
+  });
+  h+=`</div></div>`;
+
+  // Each file as a section
+  p.archivos.forEach((f,i)=>{
+    const lang=f.lenguaje||'config';
+    const colorClass='sec-'+(LANG_COLORS[lang]||'config');
+    const secId='sec-'+i;
+
+    h+=`<div class="${colorClass}"><div class="section-card" id="${secId}">
+      <div class="section-head" onclick="toggleSection('${secId}')">
+        <div class="section-num">${f.numero||i+1}</div>
+        <div class="section-info">
+          <div class="section-name">${esc(f.nombre_archivo)}</div>
+          <div class="section-file">${lang} · Sección ${f.numero||i+1} de ${p.archivos.length}</div>
+        </div>
+        <div class="section-toggle" id="${secId}-toggle">▼</div>
+      </div>
+
+      <div id="${secId}-body">
+        <div class="section-why">
+          <div class="why-label purpose">🔶 ¿POR QUÉ EXISTE ESTE ARCHIVO?</div>
+          <div class="why-text">${esc(f.por_que_existe||'')}</div>
+        </div>
+        <div class="section-why">
+          <div class="why-label function">🔷 ¿QUÉ HACE?</div>
+          <div class="why-text">${esc(f.que_hace||'')}</div>
+        </div>
+
+        <div class="section-code">
+          <div class="code-bar">
+            <div class="code-dots">
+              <div class="code-dot" style="background:#FF5F57"></div>
+              <div class="code-dot" style="background:#FEBC2E"></div>
+              <div class="code-dot" style="background:#28C840"></div>
+            </div>
+            <span class="code-filename">${esc(f.nombre_archivo)}</span>
+            <button class="copy-btn" onclick="copyCode(this,'code-${i}')">📋 Copiar</button>
+          </div>
+          <pre class="code-block" id="code-${i}">${esc(f.codigo||'')}</pre>
+        </div>
+      </div>
+    </div></div>`;
+  });
+
+  // How to use
+  h+=`<div class="card">
+    <div class="lbl">🚀 CÓMO USAR ESTE PROYECTO</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.8;white-space:pre-wrap">${esc(p.como_usar||'')}</div>
+  </div>`;
+
+  // New project button
+  h+=`<button class="btn-primary" style="width:100%;padding:14px;font-size:15px;margin-bottom:20px;" onclick="clearAll()">⚡ Nuevo Proyecto →</button>`;
+
+  ra.innerHTML=h;
+  ra.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ═══ TOGGLE SECTION ═══
+function toggleSection(id){
+  const body=document.getElementById(id+'-body');
+  const toggle=document.getElementById(id+'-toggle');
+  if(body.style.display==='none'){
+    body.style.display='block';toggle.textContent='▼';toggle.classList.add('open');
+  }else{
+    body.style.display='none';toggle.textContent='▶';toggle.classList.remove('open');
+  }
+}
+
+// ═══ COPY CODE ═══
+function copyCode(btn,id){
+  const code=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(code).then(()=>{
+    btn.textContent='✅ Copiado';btn.style.color='var(--green)';
+    setTimeout(()=>{btn.textContent='📋 Copiar';btn.style.color='';},2000);
+  });
+}
+
+// ═══ CLEAR ═══
+function clearAll(){
+  document.getElementById('orderInput').value='';
+  document.getElementById('resultArea').style.display='none';
+  document.getElementById('resultArea').innerHTML='';
+  document.getElementById('examplesCard').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══ LEARN ═══
+async function learnTopic(){
+  const topic=document.getElementById('topicInput').value.trim();if(!topic)return;
+  const btn=document.getElementById('btnLearn');btn.textContent='⏳...';btn.disabled=true;
+  const lr=document.getElementById('learnResult');
+  lr.innerHTML='<div class="card loading-box"><div class="spinner"></div><span>Preparando lección...</span></div>';
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1500,
+        system:`Eres tutor de programación para principiantes hispanohablantes. Responde SOLO en JSON válido sin markdown:
+{"titulo":"título","intro":"intro 2-3 oraciones","concepto":"explicación con analogía del mundo real","codigo":"ejemplo Python con comentarios en español","ejercicio":"ejercicio práctico","tip":"tip profesional"}`,
+        messages:[{role:'user',content:`Enséñame: ${topic}`}]
+      })
+    });
+    const data=await res.json();
+    const l=JSON.parse(data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim());
+    lr.innerHTML=`<div class="card" style="animation:fadeUp 0.3s;">
+      <div style="font-size:17px;font-weight:800;color:var(--cyan);margin-bottom:14px">${esc(l.titulo)}</div>
+      <div style="margin-bottom:14px"><div class="lbl">📖 INTRODUCCIÓN</div><div style="font-size:13px;line-height:1.7;color:var(--muted)">${esc(l.intro)}</div></div>
+      <div style="margin-bottom:14px"><div class="lbl">🧠 EL CONCEPTO</div><div style="font-size:13px;line-height:1.7;color:var(--muted)">${esc(l.concepto)}</div></div>
+      <div style="margin-bottom:14px"><div class="lbl">💻 CÓDIGO</div>
+        <div class="code-bar"><div class="code-dots"><div class="code-dot" style="background:#FF5F57"></div><div class="code-dot" style="background:#FEBC2E"></div><div class="code-dot" style="background:#28C840"></div></div><span class="code-filename">ejemplo.py</span></div>
+        <pre class="code-block">${esc(l.codigo)}</pre></div>
+      <div style="background:var(--green-bg);border:1px solid var(--green-dim);border-radius:10px;padding:14px;margin-bottom:12px;">
+        <div class="lbl" style="color:var(--green)">✏️ EJERCICIO</div><div style="font-size:13px;color:var(--green);line-height:1.7">${esc(l.ejercicio)}</div></div>
+      <div style="background:var(--cyan-bg);border:1px solid var(--cyan-dim);border-radius:10px;padding:14px;">
+        <span style="color:var(--cyan);font-weight:700;font-size:12px">💡 TIP PRO: </span><span style="font-size:12px;color:var(--muted)">${esc(l.tip)}</span></div>
+    </div>`;
+  }catch(e){
+    lr.innerHTML=`<div class="card"><div style="color:var(--red);font-size:13px">❌ Error: ${esc(e.message)}</div></div>`;
+  }
+  btn.textContent='📖 Aprender →';btn.disabled=false;
+}
+function quickLearn(t){document.getElementById('topicInput').value=t;learnTopic();}
+
+// ═══ HISTORY ═══
+function renderHistory(){
+  const el=document.getElementById('histBody');
+  if(!history.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">📭</div>Aún no has generado proyectos.</div>';return;}
+  el.innerHTML=history.map((h,i)=>`<div class="hist-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span class="meta-badge" style="color:var(--cyan);border-color:var(--cyan-dim);">${h.project.tipo||'proyecto'}</span>
+      <span class="hist-time">${h.time}</span>
+    </div>
+    <div class="hist-title">${esc(h.project.nombre_proyecto)}</div>
+    <div class="hist-order">${esc(h.order.slice(0,120))}${h.order.length>120?'...':''}</div>
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+      ${h.project.archivos.map(f=>`<span class="tpl-lang">${f.lenguaje}</span>`).join('')}
+    </div>
+    <button class="btn-secondary" style="margin-top:8px;font-size:12px;padding:7px 12px;" onclick="loadHistory(${i})">📋 Ver proyecto</button>
+  </div>`).join('');
+}
+function loadHistory(i){
+  const h=history[i];
+  document.getElementById('orderInput').value=h.order;
+  renderProject(h.project);
+  document.getElementById('examplesCard').style.display='none';
+  document.getElementById('resultArea').style.display='block';
+  setTab('architect');
+}
+
+// ═══ UTIL ═══
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
